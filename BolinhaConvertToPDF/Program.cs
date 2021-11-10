@@ -1,8 +1,8 @@
 ﻿using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System;
+using System.Drawing;
 using System.IO;
-using System.Collections;
 using System.Linq;
 
 namespace BolinhaConvertToPDF
@@ -13,18 +13,34 @@ namespace BolinhaConvertToPDF
         {
             Console.WriteLine("Seja bem vindo ao BolinhaConvertToPDF");
             Console.WriteLine();
-            Console.WriteLine("Informe como deseja converter os arquivos: ");
+            Console.WriteLine("Informe o que deseja fazer: ");
+            Console.WriteLine("1 - Separar Arquivo PDF");
+            Console.WriteLine("2 - Converter Arquivo Para PDF");
+
+            switch (ObterOpcaoSelecionada())
+            {
+                case (1):
+                    SepararArquivoPdf();
+                    break;
+                case (2):
+                    ConverterArquivo();
+                    break;
+                default:
+                    Console.WriteLine("Opção inválida, por favor inicie novamente a aplicação.");
+                    break;
+            }
+
+        }
+
+        private static void SepararArquivoPdf()
+        {
+            Console.Clear();
+            Console.WriteLine("BolinhaConvertToPDF \n");
+            Console.WriteLine("Informe qual a saída dos arquivos: ");
             Console.WriteLine("1 - Informe o caminho de cada arquivo");
             Console.WriteLine("2 - Informe o caminho da pasta que contém os arquivos");
 
-            int opacaoUsuario = 0;
-
-            while (!int.TryParse(Console.ReadLine(), out opacaoUsuario))
-            {
-                Console.WriteLine("Informe uma opção válida");
-            }
-
-            switch (opacaoUsuario)
+            switch (ObterOpcaoSelecionada())
             {
                 case (1):
                     OneToOne();
@@ -36,7 +52,51 @@ namespace BolinhaConvertToPDF
                     Console.WriteLine("Opção inválida, por favor inicie novamente a aplicação.");
                     break;
             }
+        }
 
+        private static void ConverterArquivo()
+        {
+            try
+            {
+                Head();
+
+                iTextSharp.text.Rectangle pageSize = null;
+
+                Console.WriteLine("Informe o caminho do arquivo para conversão");
+                string origemArquivo = Console.ReadLine();
+
+                Console.WriteLine("Informe o destino do arquivo convertido");
+                string destinoArquivo = Console.ReadLine();
+
+                using (Bitmap srcImage = new Bitmap(origemArquivo))
+                {
+                    pageSize = new iTextSharp.text.Rectangle(0, 0, srcImage.Width, srcImage.Height);
+                }
+                using var ms = new MemoryStream();
+                var document = new iTextSharp.text.Document(pageSize, 0, 0, 0, 0);
+                iTextSharp.text.pdf.PdfWriter.GetInstance(document, ms).SetFullCompression();
+                document.Open();
+                document.Add(iTextSharp.text.Image.GetInstance(origemArquivo));
+                document.Close();
+
+                File.WriteAllBytes(destinoArquivo + "\\NovoArquivo.pdf", ms.ToArray());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Valor inválido");
+                ConverterArquivo();
+            }
+        }
+
+        private static int ObterOpcaoSelecionada()
+        {
+            while (true)
+            {
+                if (int.TryParse(Console.ReadLine(), out int opcaoSelecionada))
+                    return opcaoSelecionada;
+                else
+                    Console.WriteLine("Informe uma opção válida");
+            }
         }
 
         /// <summary>
@@ -150,6 +210,6 @@ namespace BolinhaConvertToPDF
             PDFwriter.Close();
             PDFdoc.Close();
         }
-       
+
     }
 }
